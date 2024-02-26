@@ -64,7 +64,13 @@ client = AzureOpenAI(
 # Define routes
 @app.route('/')
 def home():
-    return render_template('index.html')
+    referer = request.headers.get('Referer')
+    if referer and 'getthatbadge.com' in referer:
+        return render_template('index.html')
+    else:
+        # Handle the case where it's not from the expected site
+        return render_template('index.html')
+    
 
 @app.route('/ask', methods=['POST'])
 def ask():
