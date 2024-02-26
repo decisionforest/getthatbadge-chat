@@ -34,10 +34,11 @@ def ensure_table_exists():
 def check_user_activities():
     with app.app_context():
         activities = UserActivity.query.all()
+        
         for activity in activities:
             print(f"ID: {activity.id}, Username: {activity.username}, Last Activity: {activity.last_activity_date}, Count: {activity.count}")
-
+        set_trace()
 if __name__ == '__main__':
     #create_tables()
-    ensure_table_exists()
+    check_user_activities()
     app.run(debug=True)  # Add this line to run your Flask app

@@ -7,7 +7,9 @@ from os import environ
 from flask_swagger_ui import get_swaggerui_blueprint
 from pdb import set_trace
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from sqlalchemy import func
+from datetime import datetime, timedelta
+
 
 # Create a Flask app
 app = Flask(__name__)
@@ -79,8 +81,6 @@ def home():
     
     referer = request.headers.get('Referer')
     username = request.args.get('username')
-    print(f"Referer: {referer}")
-    print(f"Referer: {username}")
     # If username is not in url, block access
     if not request.args.get('username'):
         abort(403)  # Forbidden access
@@ -89,8 +89,8 @@ def home():
         return render_template('index.html', username=username)
     else:
         # Handle the case where it's not from the expected site
-        print(f"Referer is not valid: {referer}")
-        abort(403)  # Forbidden access
+        abort(403)  # Forbidden access COMMENT THIS OUT IN PROD, COMMENT IN DEV
+        return render_template('index.html', username=username)
     
 
 @app.route('/ask', methods=['POST'])
@@ -98,35 +98,59 @@ def ask():
     setup_byod(deployment_id)
 
      # Get username from the form or JSON data
-    username = request.form.get('username')
+    user = request.form.get('username')
 
     # Query the UserActivity table for the current user
-    user_activity = UserActivity.query.filter_by(username=username).first()
+    user_activity = UserActivity.query.filter_by(username=user).first()
 
-    user_question = request.form.get('question')
-
-    if user_activity:
-        # Update existing record
-        user_activity.count += 1
-        user_activity.last_activity_date = datetime.utcnow()
+    if user == 'dan':
+        ai_response = None
     else:
-        # Create a new record for new user
-        user_activity = UserActivity(username=username, count=1, last_activity_date=datetime.utcnow())
-        db.session.add(user_activity)
+        # Calculate the date one month ago
+        one_month_ago = datetime.utcnow() - timedelta(days=30)
+        # Query the UserActivity table for the current user's activities in the last month
+        recent_activities = UserActivity.query \
+            .filter(UserActivity.username == user, UserActivity.last_activity_date >= one_month_ago) \
+            .all()
+        # Calculate the total count in the last month
+        total_count_last_month = sum(activity.count for activity in recent_activities)
+        #modify this to change the number of requests allowed per month
+        if total_count_last_month >= 5:
+            # Handle the case where the user has more than 50 counts in the past month
+            # For example, return an error message or abort the request
+            ai_response = 'Limit exceeded'
+        else:
+            print(f'Total Count is {total_count_last_month}')
+            ai_response = None   
+    
+    #if there's an ai response it means the limit has been exceeded
+    if not ai_response:
+        user_question = request.form.get('question')
 
-    completion = client.chat.completions.create(
-        model=environ['GPT35TURBO'],
-        messages=[
-            {"role": "system", "content": 'You are a Cloud engineering educator and trainer.'},
-            {"role": "user", "content": user_question}
-            
-        ],
-        temperature=0,
-        max_tokens=500,
-    )
+        if user_activity:
+            # Update existing record
+            user_activity.count += 1
+            user_activity.last_activity_date = datetime.utcnow()
+        else:
+            # Create a new record for new user
+            user_activity = UserActivity(username=user, count=1, last_activity_date=datetime.utcnow())
+            db.session.add(user_activity)
+            db.session.commit()
+    
+        completion = client.chat.completions.create(
+            model=environ['GPT35TURBO'],
+            messages=[
+                {"role": "system", "content": 'You are a Cloud engineering educator and trainer.'},
+                {"role": "user", "content": user_question}
+                
+            ],
+            temperature=0,
+            max_tokens=500,
+        )
 
-    ai_response = completion.choices[0].message.content
-    ai_response = remove_doc_references(ai_response)
+        ai_response = completion.choices[0].message.content
+        ai_response = remove_doc_references(ai_response)
+    
     return jsonify({'response': ai_response})
 
 test = """
@@ -163,4 +187,4 @@ def get_response():
     return jsonify({'response': ai_response})
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

@@ -34,7 +34,7 @@
 
     // Extract the 'username' parameter from the URL
     var user = getQueryParam('username');
-    
+
     document.getElementById('sendButton').onclick = function() {
         var userInput = document.getElementById('userInput').value;
         document.getElementById('userInput').value = '';
@@ -60,7 +60,7 @@
 })
 .then(data => {
     // Display the chatbot's response
-    chatbox.innerHTML += '<div class="response-block">Cloud Engineer: ' + data.response + '</div>';
+    chatbox.innerHTML += '<div class="response-block"> ' + data.response + '</div>';
     chatbox.scrollTop = chatbox.scrollHeight;
 })
 .catch(error => {
