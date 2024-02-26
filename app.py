@@ -6,9 +6,21 @@ import re
 from os import environ
 from flask_swagger_ui import get_swaggerui_blueprint
 from pdb import set_trace
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 # Create a Flask app
 app = Flask(__name__)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mydatabase.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+class UserActivity(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    last_activity_date = db.Column(db.DateTime, nullable=False)
+    count = db.Column(db.Integer, nullable=False, default=0)
 
 # Swagger configuration
 SWAGGER_URL = '/swagger'
@@ -36,7 +48,7 @@ search_key = "YOUR_SEARCH_ADMIN_KEY"  # Add your Azure Cognitive Search admin ke
 search_index_name = "YOUR_SEARCH_INDEX_NAME"  # Add your Azure Cognitive Search index name here
 
 session = None
-
+conversation_history = []
 # Function to remove document references from the response
 def remove_doc_references(response):
     return re.sub(r'\[doc\d+\]', '', response)
@@ -65,8 +77,9 @@ client = AzureOpenAI(
 @app.route('/')
 def home():
     referer = request.headers.get('Referer')
+    username = request.args.get('username')
     if referer and 'getthatbadge.com' in referer:
-        return render_template('index.html')
+        return render_template('index.html', username=username)
     else:
         # Handle the case where it's not from the expected site
         return render_template('index.html')
@@ -75,7 +88,23 @@ def home():
 @app.route('/ask', methods=['POST'])
 def ask():
     setup_byod(deployment_id)
+
+     # Get username from the form or JSON data
+    username = request.form.get('username')
+
+    # Query the UserActivity table for the current user
+    user_activity = UserActivity.query.filter_by(username=username).first()
+
     user_question = request.form.get('question')
+
+    if user_activity:
+        # Update existing record
+        user_activity.count += 1
+        user_activity.last_activity_date = datetime.utcnow()
+    else:
+        # Create a new record for new user
+        user_activity = UserActivity(username=username, count=1, last_activity_date=datetime.utcnow())
+        db.session.add(user_activity)
 
     completion = client.chat.completions.create(
         model=environ['GPT35TURBO'],

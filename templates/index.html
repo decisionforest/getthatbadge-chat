@@ -26,6 +26,52 @@
     </div>
 
   <script>
+    // Function to extract a query parameter from the URL
+    function getQueryParam(param) {
+        var urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    // Extract the 'username' parameter from the URL
+    var user = getQueryParam('username');
+    
+    document.getElementById('sendButton').onclick = function() {
+        var userInput = document.getElementById('userInput').value;
+        document.getElementById('userInput').value = '';
+
+        // Display the user's question
+        var chatbox = document.getElementById('chatbox');
+        chatbox.innerHTML += '<div class="userInput-block"> ' + userInput + '</div>';
+
+        // Send the user's question and username to the Flask backend
+        fetch('/ask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'question=' + encodeURIComponent(userInput) + '&username=' + encodeURIComponent(user)
+        })
+        .then(response => {
+    if (response.ok) {
+        return response.json();
+    } else {
+        throw new Error('Server responded with a non-JSON reply');
+    }
+})
+.then(data => {
+    // Display the chatbot's response
+    chatbox.innerHTML += '<div class="response-block">Cloud Engineer: ' + data.response + '</div>';
+    chatbox.scrollTop = chatbox.scrollHeight;
+})
+.catch(error => {
+    console.error('Error:', error);
+    chatbox.innerHTML += '<div>Error: Could not retrieve response</div>';
+});
+    };
+  </script>
+
+<!--
+  <script>
         document.getElementById('sendButton').onclick = function() {
             var userInput = document.getElementById('userInput').value;
             document.getElementById('userInput').value = '';
@@ -51,6 +97,7 @@
             .catch(error => console.error('Error:', error));
         };
     </script>
+-->
 </body>
 
 </html>
