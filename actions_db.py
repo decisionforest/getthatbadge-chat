@@ -18,6 +18,7 @@ class UserActivity(db.Model):
     last_activity_date = db.Column(db.DateTime, default=datetime.utcnow)
     count = db.Column(db.Integer, default=0)
     question = db.Column(db.String(300), nullable=False)
+    search_index = db.Column(db.String(30), nullable=False)
 
 def create_tables():
     #only run this once at the beginning
@@ -55,7 +56,7 @@ def check_user_activities():
         activities = UserActivity.query.all()
         
         for activity in activities:
-            print(f"ID: {activity.id}, Username: {activity.username}, Last Activity: {activity.last_activity_date}, Count: {activity.count}, Question: {activity.question}")
+            print(f"ID: {activity.id}, Username: {activity.username}, Last Activity: {activity.last_activity_date}, Count: {activity.count}, Question: {activity.question}, Search Index: {activity.search_index}")
 if __name__ == '__main__':
     #create_tables()
     #ensure_table_exists()

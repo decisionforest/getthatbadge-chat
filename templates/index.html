@@ -31,6 +31,9 @@
     // Extract the 'username' parameter from the URL
     var user = getQueryParam('username');
 
+     // Extract the 'searchindex' parameter from the URL
+    var searchindex = getQueryParam('searchindex');
+
     document.getElementById('sendButton').onclick = function() {
         var userInput = document.getElementById('userInput').value;
         document.getElementById('userInput').value = '';
@@ -45,7 +48,7 @@
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: 'question=' + encodeURIComponent(userInput) + '&username=' + encodeURIComponent(user)
+            body: 'question=' + encodeURIComponent(userInput) + '&username=' + encodeURIComponent(user) + '&searchindex=' + encodeURIComponent(searchindex)
         })
         .then(response => {
     if (response.ok) {
