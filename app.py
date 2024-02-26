@@ -115,7 +115,7 @@ def ask():
             .count()
         
         #modify this to change the number of requests allowed per month
-        if recent_activities_count >= 2:
+        if recent_activities_count >= 25:
             # Handle the case where the user has more than 50 counts in the past month
             # For example, return an error message or abort the request
             ai_response = 'Limit exceeded. Contact us for a limit increase.'
