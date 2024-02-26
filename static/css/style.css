@@ -272,3 +272,8 @@ code {
     text-align: right;
     display: table;
 }
+
+.helper a {
+    font-size:12px;
+    color: #333;
+}

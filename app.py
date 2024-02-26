@@ -14,15 +14,16 @@ from datetime import datetime, timedelta
 # Create a Flask app
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mydatabase.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = environ['CONNECTION_STRING_DIGITALOCEAN']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 class UserActivity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    username = db.Column(db.String(80), nullable=False)
     last_activity_date = db.Column(db.DateTime, nullable=False)
     count = db.Column(db.Integer, nullable=False, default=0)
+    question = db.Column(db.String(300), nullable=False)
 
 # Swagger configuration
 SWAGGER_URL = '/swagger'
@@ -106,36 +107,30 @@ def ask():
     if user == 'dan':
         ai_response = None
     else:
-        # Calculate the date one month ago
-        one_month_ago = datetime.utcnow() - timedelta(days=30)
-        # Query the UserActivity table for the current user's activities in the last month
-        recent_activities = UserActivity.query \
-            .filter(UserActivity.username == user, UserActivity.last_activity_date >= one_month_ago) \
-            .all()
-        # Calculate the total count in the last month
-        total_count_last_month = sum(activity.count for activity in recent_activities)
+        # Calculate the date one year ago
+        one_year_ago = datetime.utcnow() - timedelta(days=360)
+        # Query the UserActivity table for the current user's activities in the last year
+        recent_activities_count = UserActivity.query \
+            .filter(UserActivity.username == user, UserActivity.last_activity_date >= one_year_ago) \
+            .count()
+        
         #modify this to change the number of requests allowed per month
-        if total_count_last_month >= 5:
+        if recent_activities_count >= 2:
             # Handle the case where the user has more than 50 counts in the past month
             # For example, return an error message or abort the request
-            ai_response = 'Limit exceeded'
+            ai_response = 'Limit exceeded. Contact us for a limit increase.'
         else:
-            print(f'Total Count is {total_count_last_month}')
+            print(f'Total Count is {recent_activities_count}')
             ai_response = None   
     
     #if there's an ai response it means the limit has been exceeded
     if not ai_response:
         user_question = request.form.get('question')
 
-        if user_activity:
-            # Update existing record
-            user_activity.count += 1
-            user_activity.last_activity_date = datetime.utcnow()
-        else:
-            # Create a new record for new user
-            user_activity = UserActivity(username=user, count=1, last_activity_date=datetime.utcnow())
-            db.session.add(user_activity)
-            db.session.commit()
+        # Create a new record for new user
+        user_activity = UserActivity(username=user, count=1, last_activity_date=datetime.utcnow(), question=user_question[:299])
+        db.session.add(user_activity)
+        db.session.commit()
     
         completion = client.chat.completions.create(
             model=environ['GPT35TURBO'],
@@ -187,4 +182,4 @@ def get_response():
     return jsonify({'response': ai_response})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
