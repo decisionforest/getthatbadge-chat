@@ -1,7 +1,7 @@
 # Import necessary libraries
 import openai, os, requests
 from openai import AzureOpenAI
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, abort
 import re
 from os import environ
 from flask_swagger_ui import get_swaggerui_blueprint
@@ -72,17 +72,24 @@ client = AzureOpenAI(
         api_version = "2023-09-01-preview",
         azure_endpoint = environ['OPENAI_ENDPOINT']
         )
-
+ 
 # Define routes
 @app.route('/')
 def home():
+    
     referer = request.headers.get('Referer')
     username = request.args.get('username')
+
+    # If username is not in url, block access
+    if not request.args.get('username'):
+        abort(403)  # Forbidden access
+
     if referer and 'getthatbadge.com' in referer:
         return render_template('index.html', username=username)
     else:
         # Handle the case where it's not from the expected site
-        return render_template('index.html')
+        print(f"Referer is not valid: {referer}")
+        abort(403)  # Forbidden access
     
 
 @app.route('/ask', methods=['POST'])
