@@ -79,7 +79,8 @@ def home():
     
     referer = request.headers.get('Referer')
     username = request.args.get('username')
-
+    print(f"Referer: {referer}")
+    print(f"Referer: {username}")
     # If username is not in url, block access
     if not request.args.get('username'):
         abort(403)  # Forbidden access
