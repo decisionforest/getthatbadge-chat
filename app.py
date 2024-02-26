@@ -55,6 +55,12 @@ def setup_byod(deployment_id: str) -> None:
     )
     openai.requestssession = session
 
+client = AzureOpenAI(
+        api_key = environ["OPENAI_KEY"],  
+        api_version = "2023-09-01-preview",
+        azure_endpoint = environ['OPENAI_ENDPOINT']
+        )
+
 # Define routes
 @app.route('/')
 def home():
@@ -114,9 +120,4 @@ def get_response():
     return jsonify({'response': ai_response})
 
 if __name__ == '__main__':
-    client = AzureOpenAI(
-        api_key = environ["OPENAI_KEY"],  
-        api_version = "2023-09-01-preview",
-        azure_endpoint = environ['OPENAI_ENDPOINT']
-        )
     app.run()
