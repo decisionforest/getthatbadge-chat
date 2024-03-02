@@ -195,7 +195,7 @@ code {
 }
 
 #container {
-    width: 550px;
+    width: 100%;
     background-color: #202229;
     padding: 22px;
     border-radius: 8px;
