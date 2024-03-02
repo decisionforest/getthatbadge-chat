@@ -15,7 +15,7 @@
   <div id="container">
         <div id="chatbox"></div>
         <input type="text" id="userInput" placeholder="Ask your question...">
-        <button id="sendButton">Send</button>
+        <button id="sendButton">Send</button> <span class="{{'available-requests' if nr_of_available_requests != 0 else 'non-available-requests' }}">{{ nr_of_available_requests }}</span>
         <div class="helper">
           <p>Can we help? Email us at chat@getthatbadge.com</p>
         </div>

@@ -88,16 +88,33 @@ def home():
     username = request.args.get('username')
     searchindex = request.args.get('searchindex')
 
+    # Query the UserActivity table, filter by username,
+    # order by last_activity_date in descending order, and fetch the first result
+    last_activity = UserActivity.query.filter_by(username=username) \
+        .order_by(UserActivity.last_activity_date.desc()) \
+        .first()
+
+    if last_activity:
+        nr_of_available_requests = last_activity.count
+    else:
+        # Handle the case where the user has no activities
+        #Create a new record for new user directly with 25
+        user_activity = UserActivity(username=username, count=25, last_activity_date=datetime.utcnow(), question='Entered Chat', search_index=searchindex)
+        db.session.add(user_activity)
+        db.session.commit()
+        #setting the default
+        nr_of_available_requests = 25
+
     # If username is not in url, block access
     if not request.args.get('username'):
         abort(403)  # Forbidden access
 
     if referer and 'getthatbadge.com' in referer:
-        return render_template('index.html', username=username, searchindex=searchindex)
+        return render_template('index.html', username=username, searchindex=searchindex, nr_of_available_requests=nr_of_available_requests)
     else:
         # Handle the case where it's not from the expected site
-        #abort(403)  # Forbidden access COMMENT THIS OUT IN PROD, COMMENT IN DEV
-        return render_template('index.html', username=username, searchindex=searchindex)
+        abort(403)  # Forbidden access DON'T COMMENT IN PROD, COMMENT IN DEV
+        return render_template('index.html', username=username, searchindex=searchindex, nr_of_available_requests=nr_of_available_requests)
     
 
 @app.route('/ask', methods=['POST'])
@@ -111,35 +128,27 @@ def ask():
     else:
         search_index_name = ""  # Change here when a new index is added 
 
-    # Query the UserActivity table for the current user
-    user_activity = UserActivity.query.filter_by(username=user).first()
+    # Find the most recent activity for the user
+    user_activity = UserActivity.query.filter_by(username=user).order_by(UserActivity.last_activity_date.desc()).first()
 
-    if user == 'dan':
-        ai_response = None
+    #if there are no available requests and the user is not the admin, the limit has been reached
+    if user_activity and (user_activity.count == 0) and (user != 'dan'):
+        ai_response = 'Limit exceeded. Contact us for a limit increase.'
     else:
-        # Calculate the date one year ago
-        one_year_ago = datetime.utcnow() - timedelta(days=360)
-        # Query the UserActivity table for the current user's activities in the last year
-        recent_activities_count = UserActivity.query \
-            .filter(UserActivity.username == user, UserActivity.last_activity_date >= one_year_ago) \
-            .count()
-        
-        #modify this to change the number of requests allowed per month
-        if recent_activities_count >= 25:
-            # Handle the case where the user has more than 50 counts in the past month
-            # For example, return an error message or abort the request
-            ai_response = 'Limit exceeded. Contact us for a limit increase.'
-        else:
-            print(f'Total Count is {recent_activities_count}')
-            ai_response = None   
-    
-    #if there's an ai response it means the limit has been exceeded
+        ai_response = None
+
+    # if there's an ai response it means the limit has been exceeded
+    # if there's no ai response we can go ahead to:
+    # decrease the count
+    # get a response
     if not ai_response:
         user_question = request.form.get('question')
 
-        # Create a new record for new user
-        user_activity = UserActivity(username=user, count=1, last_activity_date=datetime.utcnow(), question=user_question[:299], search_index=searchindex)
-        db.session.add(user_activity)
+        # Decrease the number of available requests
+        decrease = user_activity.count - 1
+        # add last activity
+        last_activity = UserActivity(username=user, count=decrease, last_activity_date=datetime.utcnow(), question=user_question[:299], search_index=searchindex)
+        db.session.add(last_activity)
         db.session.commit()
     
         completion = client.chat.completions.create(
