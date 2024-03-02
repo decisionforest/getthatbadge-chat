@@ -1,7 +1,7 @@
 body {
     margin: 0;
-    padding: 10px 50px;
-    min-height: 100vh;
+    padding: 10px;
+    min-height: 100%;
     position: relative;
     color: #fff;
     font-family: "Nunito Sans", sans-serif;
@@ -217,7 +217,7 @@ code {
     color:#333;
 }
 #userInput {
-    width: 96.5%;
+    width: 97.6%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
