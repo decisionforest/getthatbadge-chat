@@ -197,14 +197,14 @@ code {
 #container {
     width: 100%;
     background-color: #202229;
-    padding: 22px;
+    padding-top: 20px;
     border-radius: 8px;
     text-align: center;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 #chatbox {
-    height: 250px;
+    min-height: 320px;
     border: 1px solid #ddd;
     margin-bottom: 20px;
     padding: 10px;
@@ -278,7 +278,7 @@ code {
     display: table;
 }
 
-.helper a {
+.helper p {
     font-size:12px;
     color: #e5e5e5;
 }
