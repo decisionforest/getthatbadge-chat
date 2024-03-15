@@ -122,11 +122,18 @@ def ask():
     # Get username from the form or JSON data
     user = request.form.get('username')
     # Get username from the form or JSON data
+    # Add your Azure Cognitive Search index name here
     searchindex = request.form.get('searchindex')
     if searchindex == 'Databricks':
-        search_index_name = "databricks-docs-index"  # Add your Azure Cognitive Search index name here
+        search_index_name = "databricks-docs-index"
+    elif searchindex == 'AI900':
+        search_index_name = "azure-ai-900-docs-index"
+    elif searchindex == 'AI102':
+        search_index_name = "azure-ai-102-docs-index"
+    elif searchindex == 'AZ204':
+        search_index_name = "azure-az-204-docs-index"
     else:
-        search_index_name = ""  # Change here when a new index is added 
+        search_index_name = ""
 
     # Find the most recent activity for the user
     user_activity = UserActivity.query.filter_by(username=user).order_by(UserActivity.last_activity_date.desc()).first()
