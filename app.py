@@ -161,10 +161,8 @@ def ask():
         completion = client.chat.completions.create(
             model=deployment_id,
             messages=[
-                {
-                    "role": "system", "content": "You are a Microsoft Azure and Databricks educator and trainer that helps people learn by answering questions about Microsoft Azure and Databricks. You are helping people to prepare for cloud certification exams.",
-                    "role": "user", "content": user_question,
-                }
+                {"role": "system", "content": "You are a Microsoft Azure and Databricks educator and trainer that helps people learn by answering questions about Microsoft Azure and Databricks. You are helping people to prepare for cloud certification exams."},
+                {"role": "user", "content": user_question}
             ],
             temperature=0,
             max_tokens=500,
