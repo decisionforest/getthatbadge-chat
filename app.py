@@ -75,9 +75,9 @@ def setup_byod(deployment_id: str) -> None:
 #client = AzureOpenAI(api_key = environ["OPENAI_KEY"],  api_version = "2023-09-01-preview",azure_endpoint = environ['OPENAI_ENDPOINT'])
 
 client = openai.AzureOpenAI(
-        base_url=f"{azure_endpoint}/openai/deployments/{deployment_id}/extensions",
+        azure_endpoint=azure_endpoint,
         api_key=api_key,
-        api_version="2023-09-01-preview"
+        api_version="2024-02-01",
     )
  
 # Define routes
