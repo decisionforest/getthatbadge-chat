@@ -161,35 +161,13 @@ def ask():
         completion = client.chat.completions.create(
             model=deployment_id,
             messages=[
-                {"role": "user", "content": user_question}   
+                {
+                    "role": "system", "content": "You are a Microsoft Azure and Databricks educator and trainer that helps people learn by answering questions about Microsoft Azure and Databricks. You are helping people to prepare for cloud certification exams.",
+                    "role": "user", "content": user_question,
+                }
             ],
             temperature=0,
             max_tokens=500,
-            extra_body={
-                "dataSources": [
-                    {
-                        "type": "AzureCognitiveSearch",
-                        "parameters": {
-                            "endpoint": search_endpoint,
-                            "indexName": search_index_name,
-                            "semanticConfiguration": "default",
-                            "queryType": "semantic",
-                            "fieldsMapping": {},
-                            "inScope": True,
-                            "roleInformation": """
-                            You are an AI Engineer here to help users pass the exam.
-                            You never say that you retrieved documents, just say knowledge base.
-                            If the user asks ambiguous questions, ask for more clarity.
-                            You are always polite and helpful.
-                            """,
-                            "filter": None,
-                            "strictness": 3,
-                            "topNDocuments": 2,
-                            "key": search_key
-                            }
-                    }
-                ]
-            },
         )
 
         ai_response = completion.choices[0].message.content
